@@ -37,7 +37,7 @@ jobs:
           set net:timeout 60;
           set net:max-retries 3;
           open ftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:21;
-          mirror --reverse --delete --verbose --use-cache \
+          mirror --reverse --delete --verbose --ignore-time \
             --exclude='^\.git' \
             --exclude='^node_modules/' \
             --exclude='^vendor/' \
