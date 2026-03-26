@@ -80,15 +80,24 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
       - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
-          local_path: './*'
-          remote_path: ${{ secrets.FTP_SERVER_DIR }}
-          sftp_only: true
-          delete_remote_files: false
-          args: '--exclude=.git* --exclude=node_modules --exclude=.env.example --exclude=tests --exclude=phpunit.xml'
+        run: |
+          lftp -c "
+          set sftp:connect-program 'ssh -o StrictHostKeyChecking=no';
+          set net:timeout 30;
+          set net:max-retries 3;
+          open sftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:22;
+          mirror --reverse --delete --verbose \
+            --exclude='^\.git' \
+            --exclude='^node_modules' \
+            --exclude='^\.env$' \
+            --exclude='^\.env\.example$' \
+            --exclude='^tests/' \
+            --exclude='^phpunit\.xml' \
+            --exclude='^database/database\.sqlite' \
+            . ${{ secrets.FTP_SERVER_DIR }};
+          quit;
+          "
