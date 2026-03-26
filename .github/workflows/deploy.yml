@@ -83,13 +83,14 @@ jobs:
       - name: Install lftp
         run: sudo apt-get install -y lftp
 
-      - name: Deploy via SFTP
+      - name: Deploy via FTP
         run: |
           lftp -c "
-          set sftp:connect-program 'ssh -o StrictHostKeyChecking=no';
-          set net:timeout 30;
+          set ftp:ssl-allow yes;
+          set ftp:passive-mode yes;
+          set net:timeout 60;
           set net:max-retries 3;
-          open sftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:22;
+          open ftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:21;
           mirror --reverse --delete --verbose \
             --exclude='^\.git' \
             --exclude='^node_modules' \
