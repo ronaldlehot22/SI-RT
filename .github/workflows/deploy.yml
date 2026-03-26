@@ -80,22 +80,15 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          protocol: ftps
-          port: 21
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            .env.example
-            .editorconfig
-            phpunit.xml
-            README.md
-            tests/**
-            database/database.sqlite
+          port: 22
+          local_path: './*'
+          remote_path: ${{ secrets.FTP_SERVER_DIR }}
+          sftp_only: true
+          delete_remote_files: false
+          args: '--exclude=.git* --exclude=node_modules --exclude=.env.example --exclude=tests --exclude=phpunit.xml'
