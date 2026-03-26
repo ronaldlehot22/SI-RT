@@ -28,28 +28,34 @@ jobs:
       - name: Install lftp
         run: sudo apt-get install -y lftp
 
-      - name: Deploy via FTP (exclude vendor)
+      - name: Get changed files
+        id: changed
         run: |
+          git fetch --depth=2
+          echo "files=$(git diff --name-only HEAD~1 HEAD | grep -v '^vendor/' | grep -v '^node_modules/' | grep -v '^\.env' | grep -v '^tests/' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+
+      - name: Deploy changed files via FTP
+        run: |
+          CHANGED="${{ steps.changed.outputs.files }}"
+          if [ -z "$CHANGED" ]; then
+            echo "No changed files to deploy"
+            exit 0
+          fi
+          echo "Deploying: $CHANGED"
           lftp -c "
           set ftp:ssl-allow yes;
           set ssl:verify-certificate no;
           set ftp:passive-mode yes;
           set net:timeout 60;
           set net:max-retries 3;
-          set mirror:parallel-transfer-count 5;
-          set mirror:use-pget-n 5;
-          set ftp:use-feat no;
           open ftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:21;
-          mirror --reverse --delete --verbose --ignore-time \
-            --exclude='^\.git' \
-            --exclude='^node_modules/' \
-            --exclude='^vendor/' \
-            --exclude='^\.env$' \
-            --exclude='^\.env\.example$' \
-            --exclude='^tests/' \
-            --exclude='^phpunit\.xml' \
-            --exclude='^database/database\.sqlite' \
-            . ${{ secrets.FTP_SERVER_DIR }};
+          $(for f in $CHANGED; do
+            dir=$(dirname $f)
+            if [ \"$dir\" != \".\" ]; then
+              echo "mkdir -p ${{ secrets.FTP_SERVER_DIR }}$dir;"
+            fi
+            echo "put $f -o ${{ secrets.FTP_SERVER_DIR }}$f;"
+          done)
           quit;
           "
 
