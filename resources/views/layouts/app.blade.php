@@ -70,6 +70,12 @@
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* Slide up (bottom sheets) */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
         /* Scrollbar hidden */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -271,6 +277,48 @@
             </a>
         </div>
     </nav>
+
+    {{-- Modal Konfirmasi Hapus (global) --}}
+    <div id="modal-hapus" class="hidden fixed inset-0 z-[60]" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="tutupModalHapus()"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl"
+             style="padding: 24px 20px calc(32px + env(safe-area-inset-bottom, 0px)) 20px; animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both">
+            <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-6"></div>
+            <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </div>
+            <h3 class="font-display font-bold text-gray-800 text-lg text-center">Hapus Data?</h3>
+            <p id="modal-hapus-pesan" class="text-sm text-gray-500 text-center mt-1.5 mb-6 leading-relaxed px-4"></p>
+            <div class="flex gap-3">
+                <button type="button" onclick="tutupModalHapus()"
+                        class="flex-1 py-3.5 rounded-2xl border-2 border-gray-200 text-gray-600 text-sm font-bold active:bg-gray-50 transition-colors">
+                    Batal
+                </button>
+                <form id="modal-hapus-form" method="POST" class="flex-1">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="w-full py-3.5 rounded-2xl bg-red-500 text-white text-sm font-bold active:bg-red-600 transition-colors"
+                            style="box-shadow: 0 6px 20px rgba(239,68,68,0.35)">
+                        Ya, Hapus
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function bukaModalHapus(action, pesan) {
+        document.getElementById('modal-hapus-pesan').textContent = pesan;
+        document.getElementById('modal-hapus-form').action = action;
+        document.getElementById('modal-hapus').classList.remove('hidden');
+    }
+    function tutupModalHapus() {
+        document.getElementById('modal-hapus').classList.add('hidden');
+    }
+    </script>
 
     @stack('scripts')
 </body>

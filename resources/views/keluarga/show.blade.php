@@ -135,14 +135,11 @@
         </div>
 
         {{-- Delete KK --}}
-        <form action="{{ route('keluarga.destroy', $keluarga) }}" method="POST"
-              onsubmit="return confirm('Hapus KK {{ $keluarga->no_kk }}? Semua data anggota juga akan terhapus.')">
-            @csrf @method('DELETE')
-            <button type="submit"
-                    class="w-full py-3.5 rounded-2xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-colors">
-                Hapus Kartu Keluarga
-            </button>
-        </form>
+        <button type="button"
+                onclick="bukaModalHapus('{{ route('keluarga.destroy', $keluarga) }}', 'KK ini beserta seluruh data anggota akan dihapus secara permanen.')"
+                class="w-full py-3.5 rounded-2xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-colors">
+            Hapus Kartu Keluarga
+        </button>
 
     </div>
 </div>
@@ -251,7 +248,7 @@ function toggleModal() {
 
 function showKeluarModal(anggotaId, nama) {
     document.getElementById('keluar-nama').textContent = nama;
-    const baseUrl = "{{ url('keluarga/".$keluarga->id."/anggota') }}/";
+    const baseUrl = "{{ url('keluarga') }}/{{ $keluarga->id }}/anggota/";
     document.getElementById('form-keluar').action = baseUrl + anggotaId + '/keluar';
     document.getElementById('modal-keluar').classList.remove('hidden');
 }

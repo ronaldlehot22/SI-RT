@@ -141,14 +141,11 @@
         @endif
 
         {{-- Delete --}}
-        <form action="{{ route('penduduk.destroy', $penduduk) }}" method="POST"
-              onsubmit="return confirm('Hapus data {{ $penduduk->nama_lengkap }}?')">
-            @csrf @method('DELETE')
-            <button type="submit"
-                    class="w-full py-3.5 rounded-2xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-colors">
-                Hapus Data Penduduk
-            </button>
-        </form>
+        <button type="button"
+                onclick="bukaModalHapus('{{ route('penduduk.destroy', $penduduk) }}', 'Data penduduk ini akan dihapus secara permanen dan tidak bisa dikembalikan.')"
+                class="w-full py-3.5 rounded-2xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-colors">
+            Hapus Data Penduduk
+        </button>
 
     </div>
 </div>
