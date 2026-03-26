@@ -59,7 +59,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd ${{ secrets.SSH_DIR }}
-            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-req=php
             php artisan config:clear
             php artisan cache:clear
             php artisan route:clear
