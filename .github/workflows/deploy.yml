@@ -13,23 +13,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP 8.3
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: pdo, pdo_mysql, mbstring, xml, bcmath, curl
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Install Composer dependencies (production)
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,48 +25,10 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Create .env
-        run: |
-          cat > .env << EOF
-          APP_NAME="${{ secrets.APP_NAME }}"
-          APP_ENV=production
-          APP_KEY=
-          APP_DEBUG=false
-          APP_URL=${{ secrets.APP_URL }}
-
-          DB_CONNECTION=mysql
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_DATABASE=${{ secrets.DB_DATABASE }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
-          CACHE_STORE=database
-          SESSION_DRIVER=database
-          QUEUE_CONNECTION=database
-          EOF
-
-      - name: Generate app key
-        run: php artisan key:generate
-
-      - name: Clear cache
-        run: |
-          php artisan config:clear
-          php artisan route:clear
-          php artisan view:clear
-          php artisan event:clear
-
-      - name: Optimize for production
-        run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          php artisan event:cache
-
       - name: Install lftp
         run: sudo apt-get install -y lftp
 
-      - name: Deploy via FTP
+      - name: Deploy via FTP (exclude vendor)
         run: |
           lftp -c "
           set ftp:ssl-allow yes;
@@ -94,7 +39,8 @@ jobs:
           open ftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@${{ secrets.FTP_SERVER }}:21;
           mirror --reverse --delete --verbose \
             --exclude='^\.git' \
-            --exclude='^node_modules' \
+            --exclude='^node_modules/' \
+            --exclude='^vendor/' \
             --exclude='^\.env$' \
             --exclude='^\.env\.example$' \
             --exclude='^tests/' \
@@ -103,3 +49,25 @@ jobs:
             . ${{ secrets.FTP_SERVER_DIR }};
           quit;
           "
+
+      - name: Run post-deploy commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.FTP_SERVER_DIR }}
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan event:clear
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            php artisan storage:link
