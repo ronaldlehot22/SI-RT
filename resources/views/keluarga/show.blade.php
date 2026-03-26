@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'KK '.$keluarga->no_kk)
+@section('title', 'Detail Keluarga')
 @section('header_title', 'Detail KK')
 @section('back')
 @endsection

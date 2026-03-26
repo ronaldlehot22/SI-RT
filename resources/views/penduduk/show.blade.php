@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $penduduk->nama_lengkap)
+@section('title', 'Detail Penduduk')
 @section('header_title', 'Detail Penduduk')
 @section('back')
 @endsection
